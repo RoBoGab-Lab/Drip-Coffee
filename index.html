@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="신단쓴">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>신단쓴 물 배분 계산기</title>
+<style>
+  :root {
+    --bg: #f6f1ea; --card: #ffffff; --ink: #2b1d14; --muted: #8a8a8a;
+    --accent: #7a4a2a; --line: #e4d9cc; --sin: #c0563b; --dan: #c99a2e; --sseun: #5b3a29;
+    --field: #fffdf9; --ph: #b0b0b0; --warn: #c62828; --hover: #f3e9dd;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #1a1512; --card: #241e1a; --ink: #f1e8df; --muted: #9a918a; --accent: #d9a27a; --line: #3b322b;
+    --sseun: #a8775c; --field: #2c2520; --ph: #7d746d; --warn: #ef6a6a; --hover: #322a24; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #1a1512; --card: #241e1a; --ink: #f1e8df; --muted: #9a918a; --accent: #d9a27a; --line: #3b322b;
+    --sseun: #a8775c; --field: #2c2520; --ph: #7d746d; --warn: #ef6a6a; --hover: #322a24; color-scheme: dark }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    padding: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin: 8px 0 16px; text-align: center; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  .top { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+  label.big { font-weight: 600; font-size: 1.05rem; }
+  .bean-input { display: flex; align-items: center; gap: 6px; }
+  input[type=number] {
+    font-size: 1.15rem; padding: 8px 10px; width: 120px; text-align: right;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--ink);
+  }
+  input[type=number]::placeholder { color: var(--ph); opacity: 1; }
+  input[type=number]:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .total { font-size: 1.05rem; }
+  .total b { font-size: 1.5rem; color: var(--accent); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
+  .col h2 { font-size: 1.1rem; margin: 0 0 12px; text-align: center; }
+  .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-top: 1px dashed var(--line); gap: 8px;
+  }
+  .row:first-of-type { border-top: none; }
+  .row .name { font-weight: 600; }
+  .row .name small { display: block; font-weight: 400; color: var(--muted); font-size: .78rem; }
+  .tag { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .val { font-size: 1.2rem; font-weight: 700; text-align: right; min-width: 80px; }
+  .val.gray { color: var(--muted); font-weight: 600; }
+  .val.warn, .warn { color: var(--warn); }
+  .unit { color: var(--muted); font-size: .9rem; margin-left: 2px; }
+  .cum { font-size: .78rem; color: var(--muted); text-align: right; }
+  .btn {
+    border: 1px solid var(--line); background: var(--field); color: var(--ink);
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: .95rem;
+  }
+  .btn:hover { background: var(--hover); }
+  .note { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>☕ 신·단·쓴 물 배분 계산기</h1>
+
+  <div class="card top">
+    <div class="bean-input">
+      <label class="big" for="bean">원두량</label>
+      <input type="number" id="bean" min="0" step="0.1" inputmode="decimal" placeholder="예: 20">
+      <span class="unit">g</span>
+    </div>
+    <div class="total">전체 물량 (×16): <b id="total">0</b><span class="unit">g</span></div>
+    <button class="btn" id="reset">초기화</button>
+  </div>
+
+  <div class="cols">
+    <div class="card col" data-mult="2"></div>
+    <div class="card col" data-mult="3"></div>
+  </div>
+
+  <p class="note">
+    · 회색 숫자는 남은 물량(그대로 부으면 되는 양)입니다. 칸에 원하는 양을 입력하면 다음 단계의 남은 물량이 자동 계산됩니다.<br>
+    · 각 단계 아래 작은 글씨는 저울 기준 누적 물량입니다.
+  </p>
+</div>
+
+<script>
+(function () {
+  const RATIO = 16;
+  const beanEl = document.getElementById('bean');
+  const totalEl = document.getElementById('total');
+
+  const fmt = n => {
+    const r = Math.round(n * 10) / 10;
+    return Number.isInteger(r) ? String(r) : r.toFixed(1);
+  };
+
+  // 각 열(뜸 2배 / 3배) 구성
+  const cols = [...document.querySelectorAll('.col')].map(el => {
+    const m = Number(el.dataset.mult);
+    el.innerHTML = `
+      <h2>뜸들이기 ${m}배</h2>
+      <div class="row">
+        <div class="name">뜸들이기<small>원두 × ${m}</small></div>
+        <div><div class="val"><span class="bloom">0</span><span class="unit">g</span></div>
+             <div class="cum">누적 <span class="c0">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag" style="background:var(--sin)"></span>1차 물붓기 (신)</div>
+        <div><input type="number" class="p1" min="0" step="1" inputmode="decimal" placeholder="0">
+             <div class="cum">누적 <span class="c1">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag" style="background:var(--dan)"></span>2차 물붓기 (단)</div>
+        <div><input type="number" class="p2" min="0" step="1" inputmode="decimal" placeholder="0">
+             <div class="cum">누적 <span class="c2">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag" style="background:var(--sseun)"></span>3차 물붓기 (쓴)</div>
+        <div><div class="val"><span class="p3">0</span><span class="unit">g</span></div>
+             <div class="cum">누적 <span class="c3">0</span>g</div></div>
+      </div>`;
+    const q = s => el.querySelector(s);
+    const c = { m, bloom: q('.bloom'), p1: q('.p1'), p2: q('.p2'), p3: q('.p3'),
+                c0: q('.c0'), c1: q('.c1'), c2: q('.c2'), c3: q('.c3') };
+    c.p1.addEventListener('input', update);
+    c.p2.addEventListener('input', update);
+    return c;
+  });
+
+  const num = el => {
+    const v = parseFloat(el.value);
+    return isNaN(v) ? null : v;
+  };
+
+  function update() {
+    const bean = parseFloat(beanEl.value) || 0;
+    const total = bean * RATIO;
+    totalEl.textContent = fmt(total);
+
+    cols.forEach(c => {
+      const bloom = bean * c.m;
+      c.bloom.textContent = fmt(bloom);
+
+      // 1차(신): 기본값 = 전체 - 뜸
+      const rem1 = total - bloom;
+      c.p1.placeholder = fmt(rem1);
+      const v1 = num(c.p1);
+      const p1 = v1 === null ? rem1 : v1;
+
+      // 2차(단): 기본값 = 전체 - 뜸 - 1차
+      const rem2 = rem1 - p1;
+      c.p2.placeholder = fmt(rem2);
+      const v2 = num(c.p2);
+      const p2 = v2 === null ? rem2 : v2;
+
+      // 3차(쓴): 나머지
+      const p3 = rem2 - p2;
+      c.p3.textContent = fmt(p3);
+      c.p3.parentElement.classList.toggle('warn', p3 < 0);
+      c.p3.parentElement.classList.toggle('gray', v2 === null);
+
+      // 저울 누적
+      c.c0.textContent = fmt(bloom);
+      c.c1.textContent = fmt(bloom + p1);
+      c.c2.textContent = fmt(bloom + p1 + p2);
+      c.c3.textContent = fmt(bloom + p1 + p2 + p3);
+    });
+  }
+
+  beanEl.addEventListener('input', update);
+  document.getElementById('reset').addEventListener('click', () => {
+    beanEl.value = '';
+    cols.forEach(c => { c.p1.value = ''; c.p2.value = ''; });
+    update();
+    beanEl.focus();
+  });
+
+  update();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "신단쓴 물 배분 계산기",
+  "short_name": "신단쓴",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6f1ea",
+  "theme_color": "#7a4a2a",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
