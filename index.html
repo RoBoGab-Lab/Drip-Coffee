@@ -45,6 +45,31 @@
   input[type=number]:focus { outline: 2px solid var(--accent); border-color: transparent; }
   .total { font-size: 1.05rem; }
   .total b { font-size: 1.5rem; color: var(--accent); }
+  :root { --ice: #3a8fb7; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ice: #6cb8dc; } }
+  :root[data-theme="dark"] { --ice: #6cb8dc; }
+  .switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; user-select: none; -webkit-user-select: none; }
+  .switch input { position: absolute; opacity: 0; pointer-events: none; }
+  .switch .knob { width: 46px; height: 26px; border-radius: 999px; background: var(--line); position: relative; transition: background .2s; flex: none; }
+  .switch .knob::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .2s; }
+  .switch input:checked + .knob { background: var(--ice); }
+  .switch input:checked + .knob::after { transform: translateX(20px); }
+  .switch input:focus-visible + .knob { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ice-split { display: none; width: 100%; background: var(--field); border: 1px dashed var(--ice); border-radius: 10px;
+    padding: 10px 12px; font-size: .95rem; line-height: 1.6; }
+  .ice-split b { font-size: 1.15rem; }
+  .ice-split .hot { color: var(--sin); }
+  .ice-split .icev { color: var(--ice); }
+  .ice-ratio { display: flex; align-items: center; gap: 6px; margin: 8px 0 4px; flex-wrap: wrap; }
+  .ice-ratio label { font-weight: 600; }
+  .ice-ratio input[type=number] { width: 72px; font-size: 1rem; padding: 6px 8px; }
+  .ice-ratio .ice-hint { font-size: .78rem; color: var(--muted); }
+  .ice-split small { display: block; color: var(--muted); font-size: .78rem; }
+  body.iced .ice-split { display: block; }
+  .row.ice-row { display: none; }
+  body.iced .row.ice-row { display: flex; }
+  body.iced .total-label::after { content: " · 아이스"; color: var(--ice); font-weight: 700; }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
   .col h2 { font-size: 1.1rem; margin: 0 0 12px; text-align: center; }
@@ -140,19 +165,84 @@
       <input type="number" id="bean" min="0" step="0.1" inputmode="decimal" placeholder="예: 20">
       <span class="unit">g</span>
     </div>
-    <div class="total">전체 물량 (×15): <b id="total">0</b><span class="unit">g</span></div>
+    <div class="total"><span class="total-label">전체 물량 (×15)</span>: <b id="total">0</b><span class="unit">g</span></div>
+    <label class="switch"><input type="checkbox" id="iced"><span class="knob"></span>🧊 아이스</label>
     <button class="btn" id="reset">초기화</button>
+    <div class="ice-split">
+      뜨거운 물 <b class="hot" id="hotW">0</b><span class="unit">g</span> &nbsp;+&nbsp; 서버 얼음 <b class="icev" id="iceW">0</b><span class="unit">g</span>
+      <div class="ice-ratio">
+        <label for="iceRatio">얼음 비율</label>
+        <input type="number" id="iceRatio" min="0" max="70" step="5" inputmode="numeric" value="40">
+        <span class="unit">%</span>
+        <span class="ice-hint">권장 35~45%</span>
+      </div>
+      <small>얼음을 서버에 먼저 담고 저울을 0으로 맞춘 뒤 내리세요.</small>
+    </div>
   </div>
 
   <div class="cols">
-    <div class="card col" data-mult="3"></div>
-    <div class="card col" data-mult="2"></div>
+    <div class="card col" data-mult="3">
+      <h2>뜸들이기 3배(약배전)</h2>
+      <div class="row">
+        <div class="name">뜸들이기<small>원두 × 3</small></div>
+        <div><div class="val"><span class="bloom">0</span><span class="unit">g</span></div>
+             <div class="cum">누적 <span class="c0">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag" style="background:var(--sin)"></span>1차 물붓기 (신)</div>
+        <div><input type="number" class="p1" min="0" step="1" inputmode="decimal" placeholder="0">
+             <div class="cum">누적 <span class="c1">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag" style="background:var(--dan)"></span>2차 물붓기 (단)</div>
+        <div><input type="number" class="p2" min="0" step="1" inputmode="decimal" placeholder="0">
+             <div class="cum">누적 <span class="c2">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag" style="background:var(--sseun)"></span>3차 물붓기 (쓴)</div>
+        <div><div class="val gray"><span class="p3">0</span><span class="unit">g</span></div>
+             <div class="cum">누적 <span class="c3">0</span>g</div></div>
+      </div>
+      <div class="row ice-row">
+        <div class="name"><span class="tag" style="background:var(--ice)"></span>🧊 얼음<small>서버에 미리 담기</small></div>
+        <div><div class="val"><span class="ice">0</span><span class="unit">g</span></div>
+             <div class="cum">합계 <span class="c4">0</span>g</div></div>
+      </div></div>
+    <div class="card col" data-mult="2">
+      <h2>뜸들이기 2배(강배전)</h2>
+      <div class="row">
+        <div class="name">뜸들이기<small>원두 × 2</small></div>
+        <div><div class="val"><span class="bloom">0</span><span class="unit">g</span></div>
+             <div class="cum">누적 <span class="c0">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag" style="background:var(--sin)"></span>1차 물붓기 (신)</div>
+        <div><input type="number" class="p1" min="0" step="1" inputmode="decimal" placeholder="0">
+             <div class="cum">누적 <span class="c1">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag" style="background:var(--dan)"></span>2차 물붓기 (단)</div>
+        <div><input type="number" class="p2" min="0" step="1" inputmode="decimal" placeholder="0">
+             <div class="cum">누적 <span class="c2">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag" style="background:var(--sseun)"></span>3차 물붓기 (쓴)<small class="p3-sub">추출 합계 원두 × 12까지</small></div>
+        <div><input type="number" class="p3" min="0" step="1" inputmode="decimal" placeholder="0">
+             <div class="cum">누적 <span class="c3">0</span>g</div></div>
+      </div>
+      <div class="row">
+        <div class="name"><span class="tag aw-tag" style="background: var(--muted);"></span><span class="aw-name">가수 (물 추가)</span><small class="aw-sub">서버에 뜨거운 물 보충</small></div>
+        <div><div class="val gray"><span class="aw">0</span><span class="unit">g</span></div>
+             <div class="cum">누적 <span class="c4">0</span>g</div></div>
+      </div></div>
   </div>
 
   <p class="note">
     · 회색 숫자는 남은 물량(그대로 부으면 되는 양)입니다. 칸에 원하는 양을 입력하면 다음 단계의 남은 물량이 자동 계산됩니다.<br>
     · 각 단계 아래 작은 글씨는 저울 기준 누적 물량입니다.<br>
-    · 뜸들이기 2배(강배전)는 원두 × 12까지만 추출하고, 나머지는 가수(물 추가)로 전체 물량을 맞춥니다.
+    · 뜸들이기 2배(강배전)는 원두 × 12까지만 추출하고, 나머지는 가수(물 추가)로 전체 물량을 맞춥니다.<br>
+    · 🧊 아이스를 켜면 설정한 얼음 비율(기본 40%)만큼 서버에 담은 얼음으로 채우고, 나머지만 뜨거운 물로 추출합니다. (강배전의 가수도 얼음으로 대체)<br>
+    · 아이스는 물이 적어 덜 추출되기 쉬우므로 분쇄도를 한 단계 가늘게 하세요.
   </p>
 
   <!-- ===== 드립 커피 맛있게 내리기 ===== -->
@@ -298,6 +388,10 @@
 <script>
 (function () {
   const RATIO = 15;
+  const iceRatioEl = document.getElementById('iceRatio'); // 아이스: 얼음 비율(%)
+  const icedEl = document.getElementById('iced');
+  const hotEl = document.getElementById('hotW');
+  const iceEl = document.getElementById('iceW');
   const EXTRACT_RATIO = 12; // 뜸 2배: 1:12로 추출 후 가수로 전체 물량 맞춤
   const beanEl = document.getElementById('bean');
   const totalEl = document.getElementById('total');
@@ -310,7 +404,7 @@
   // 각 열(뜸 2배 / 3배) 구성
   const cols = [...document.querySelectorAll('.col')].map(el => {
     const m = Number(el.dataset.mult);
-    el.innerHTML = `
+    if (!el.querySelector('.row')) el.innerHTML = `
       <h2>뜸들이기 ${m}배(${m === 2 ? '강배전' : '약배전'})</h2>
       <div class="row">
         <div class="name">뜸들이기<small>원두 × ${m}</small></div>
@@ -328,20 +422,25 @@
              <div class="cum">누적 <span class="c2">0</span>g</div></div>
       </div>
       <div class="row">
-        <div class="name"><span class="tag" style="background:var(--sseun)"></span>3차 물붓기 (쓴)${m === 2 ? '<small>추출 합계 원두 × ' + EXTRACT_RATIO + '까지</small>' : ''}</div>
+        <div class="name"><span class="tag" style="background:var(--sseun)"></span>3차 물붓기 (쓴)${m === 2 ? '<small class="p3-sub">추출 합계 원두 × ' + EXTRACT_RATIO + '까지</small>' : ''}</div>
         <div>${m === 2
           ? '<input type="number" class="p3" min="0" step="1" inputmode="decimal" placeholder="0">'
           : '<div class="val"><span class="p3">0</span><span class="unit">g</span></div>'}
              <div class="cum">누적 <span class="c3">0</span>g</div></div>
       </div>${m === 2 ? `
       <div class="row">
-        <div class="name"><span class="tag" style="background:var(--muted)"></span>가수 (물 추가)<small>서버에 뜨거운 물 보충</small></div>
+        <div class="name"><span class="tag aw-tag" style="background:var(--muted)"></span><span class="aw-name">가수 (물 추가)</span><small class="aw-sub">서버에 뜨거운 물 보충</small></div>
         <div><div class="val"><span class="aw">0</span><span class="unit">g</span></div>
              <div class="cum">누적 <span class="c4">0</span>g</div></div>
-      </div>` : ''}`;
+      </div>` : `
+      <div class="row ice-row">
+        <div class="name"><span class="tag" style="background:var(--ice)"></span>🧊 얼음<small>서버에 미리 담기</small></div>
+        <div><div class="val"><span class="ice">0</span><span class="unit">g</span></div>
+             <div class="cum">합계 <span class="c4">0</span>g</div></div>
+      </div>`}`;
     const q = s => el.querySelector(s);
     const c = { m, dilute: m === 2, bloom: q('.bloom'), p1: q('.p1'), p2: q('.p2'), p3: q('.p3'),
-                aw: q('.aw'), c0: q('.c0'), c1: q('.c1'), c2: q('.c2'), c3: q('.c3'), c4: q('.c4') };
+                aw: q('.aw'), ice: q('.ice'), awTag: q('.aw-tag'), awName: q('.aw-name'), awSub: q('.aw-sub'), p3Sub: q('.p3-sub'), c0: q('.c0'), c1: q('.c1'), c2: q('.c2'), c3: q('.c3'), c4: q('.c4') };
     c.p1.addEventListener('input', update);
     c.p2.addEventListener('input', update);
     if (c.dilute) c.p3.addEventListener('input', update);
@@ -356,14 +455,24 @@
   function update() {
     const bean = parseFloat(beanEl.value) || 0;
     const total = bean * RATIO;
+    const iced = icedEl.checked;
+    document.body.classList.toggle('iced', iced);
+    let pct = parseFloat(iceRatioEl.value);
+    if (isNaN(pct)) pct = 40;
+    pct = Math.min(Math.max(pct, 0), 70);
+    const iceAmt = iced ? total * pct / 100 : 0;
+    const hot = total - iceAmt;
     totalEl.textContent = fmt(total);
+    hotEl.textContent = fmt(hot);
+    iceEl.textContent = fmt(iceAmt);
 
     cols.forEach(c => {
       const bloom = bean * c.m;
       c.bloom.textContent = fmt(bloom);
 
       // 추출 목표: 뜸 3배 = 전체, 뜸 2배 = 원두 × 12 (나머지는 가수)
-      const target = c.dilute ? Math.min(bean * EXTRACT_RATIO, total) : total;
+      // 아이스: 뜨거운 물(전체 - 얼음)까지만 추출
+      const target = c.dilute ? Math.min(bean * EXTRACT_RATIO, hot) : hot;
 
       // 1차(신): 기본값 = 추출 목표 - 뜸
       const rem1 = target - bloom;
@@ -390,7 +499,13 @@
         c.aw.parentElement.classList.toggle('warn', aw < 0);
         c.aw.parentElement.classList.toggle('gray', v3 === null);
         c.c4.textContent = fmt(total);
+        c.awTag.style.background = iced ? 'var(--ice)' : 'var(--muted)';
+        c.awName.textContent = iced ? '🧊 얼음' : '가수 (물 추가)';
+        c.p3Sub.textContent = iced ? '추출 합계 = 뜨거운 물' : '추출 합계 원두 × ' + EXTRACT_RATIO + '까지';
+        c.awSub.textContent = iced ? '서버에 미리 담기 (가수 대체)' : '서버에 뜨거운 물 보충';
       } else {
+        c.ice.textContent = fmt(iceAmt);
+        c.c4.textContent = fmt(total);
         p3 = rem3;
         c.p3.textContent = fmt(p3);
         c.p3.parentElement.classList.toggle('warn', p3 < 0);
@@ -406,6 +521,8 @@
   }
 
   beanEl.addEventListener('input', update);
+  icedEl.addEventListener('change', update);
+  iceRatioEl.addEventListener('input', update);
   document.getElementById('reset').addEventListener('click', () => {
     beanEl.value = '';
     cols.forEach(c => { c.p1.value = ''; c.p2.value = ''; if (c.dilute) c.p3.value = ''; });
